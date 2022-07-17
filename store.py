@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
-from database_tools import create_db_connection, execute_query
+from database_tools import create_db_connection, execute_query, execute_search_query
 
 from dotenv import load_dotenv
 import os
@@ -17,6 +19,8 @@ class Store:
 
     NOTE: This is an abstract class. DO NOT initialize this class.
     """
+
+    @staticmethod
     def update_inventory(self, driver: webdriver.Safari) -> None:
         """ Drop the current 'STORENAME' table in the database defined in .env, and create a new one with all PC
         components sold at this store. The table will contain a unique identifier corresponding to the item, the item's
@@ -27,6 +31,8 @@ class Store:
 
 
 class BestBuy(Store):
+
+    @staticmethod
     def update_inventory(self, driver: webdriver.Safari) -> None:
         """ Drop the current 'best_buy' table in the database defined in .env, and create a new one with all PC
         components sold at BestBuy (and sold only by BestBuy and not marketplace sellers). The table will contain a
@@ -98,5 +104,74 @@ class BestBuy(Store):
                 # in this case, a timeout occur (because the script takes too long to execute). Simply reload the page and continue the loop.
                 driver.get(f'https://www.bestbuy.ca/en-ca/category/pc-components/20374?path=category%253AComputers%2B%2526%2BTablets%253Bcategory%253APC%2BComponents%253Bsoldandshippedby0enrchstring%253ABest%2BBuy&sort=highestRated&page={page_number}')
 
+    @staticmethod
+    def all_names() -> list[str]:
+        """ Return a list containing the names of every PC component sold at BestBuy.
+        """
+        connection = create_db_connection(os.environ.get("database_host"),
+                                          os.environ.get("database_username"),
+                                          os.environ.get("database_password"),
+                                          os.environ.get("database_name"))
+        return [item[0] for item in execute_search_query(connection, 'SELECT name FROM `best_buy`')]
 
+    @staticmethod
+    def in_db(name: str) -> bool:
+        """ Return whether there exists a product in the database with name like <name>.
+        """
+        connection = create_db_connection(os.environ.get("database_host"),
+                                          os.environ.get("database_username"),
+                                          os.environ.get("database_password"),
+                                          os.environ.get("database_name"))
+        return len(execute_search_query(connection, f'SELECT name FROM pcpartsbotdb.best_buy where name LIKE "%{name}%" LIMIT 1;')) == 1
 
+    @staticmethod
+    def actual_name(name: str) -> str:
+        """ Given the name of an item in the database or a similar name, return the actual name of the item as it
+        appears in the database.
+        """
+        connection = create_db_connection(os.environ.get("database_host"),
+                                          os.environ.get("database_username"),
+                                          os.environ.get("database_password"),
+                                          os.environ.get("database_name"))
+        return execute_search_query(connection, f'SELECT name FROM pcpartsbotdb.best_buy where name LIKE "%{name}%" LIMIT 1;')[0][0]
+
+    @staticmethod
+    def item_price(name: str) -> Optional[float]:
+        """ Return the price of the item with <name> if it exists in the database. Otherwise, return None.
+        """
+        connection = create_db_connection(os.environ.get("database_host"),
+                                          os.environ.get("database_username"),
+                                          os.environ.get("database_password"),
+                                          os.environ.get("database_name"))
+        return execute_search_query(connection, f'SELECT price FROM `best_buy` WHERE name LIKE "%{name}%" LIMIT 1')[0][0] if BestBuy.in_db(name) else None
+
+    @staticmethod
+    def item_discount(name: str) -> Optional[float]:
+        """ Return the discount amount of the item with <name>. if it exists in the database. Otherwise, return None.
+        """
+        connection = create_db_connection(os.environ.get("database_host"),
+                                          os.environ.get("database_username"),
+                                          os.environ.get("database_password"),
+                                          os.environ.get("database_name"))
+        return execute_search_query(connection, f'SELECT sale_amount FROM `best_buy` WHERE name LIKE "%{name}%" LIMIT 1')[0][0] if BestBuy.in_db(name) else None
+
+    @staticmethod
+    def item_stock(name: str) -> Optional[bool]:
+        """ Return whether the item with <name> is in stock online. if it exists in the database. Otherwise, return None.
+        """
+        connection = create_db_connection(os.environ.get("database_host"),
+                                          os.environ.get("database_username"),
+                                          os.environ.get("database_password"),
+                                          os.environ.get("database_name"))
+        return (True if execute_search_query(connection, f'SELECT in_stock FROM `best_buy` WHERE name LIKE "%{name}%" LIMIT 1')[0][0] == 1 else False) if BestBuy.in_db(name) else None
+
+    @staticmethod
+    def item_link(name: str) -> Optional[str]:
+        """ Return a URL linking to the details section of item with <name>. if it exists in the database. Otherwise,
+        return None.
+        """
+        connection = create_db_connection(os.environ.get("database_host"),
+                                          os.environ.get("database_username"),
+                                          os.environ.get("database_password"),
+                                          os.environ.get("database_name"))
+        return execute_search_query(connection, f'SELECT link FROM `best_buy` WHERE name LIKE "%{name}%" LIMIT 1')[0][0] if BestBuy.in_db(name) else None
