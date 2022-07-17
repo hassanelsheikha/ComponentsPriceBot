@@ -21,7 +21,7 @@ class Store:
     """
 
     @staticmethod
-    def update_inventory(self, driver: webdriver.Safari) -> None:
+    def update_inventory(driver: webdriver.Safari) -> None:
         """ Drop the current 'STORENAME' table in the database defined in .env, and create a new one with all PC
         components sold at this store. The table will contain a unique identifier corresponding to the item, the item's
         name, the item's current price, the item's discount (if any), if the item is in stock, and a URL linking to the
@@ -33,12 +33,14 @@ class Store:
 class BestBuy(Store):
 
     @staticmethod
-    def update_inventory(self, driver: webdriver.Safari) -> None:
+    def update_inventory(driver: webdriver.Safari = None) -> None:
         """ Drop the current 'best_buy' table in the database defined in .env, and create a new one with all PC
         components sold at BestBuy (and sold only by BestBuy and not marketplace sellers). The table will contain a
         unique identifier corresponding to the item, the item's name, the item's current price, the item's discount (if
         any), if the item is in stock, and a URL linking to the item's page on the BestBuy website.
         """
+        if driver is None:
+            driver = webdriver.Safari(executable_path=os.environ.get("safaridriver_path"))
         # === DATABASE SETUP ===
         # create a connection to the database defined in .env
         connection = create_db_connection(os.environ.get("database_host"),
@@ -51,7 +53,6 @@ class BestBuy(Store):
         execute_query(connection,
                       'CREATE TABLE `pcpartsbotdb`.`best_buy` (`id` INT NOT NULL AUTO_INCREMENT,`name` VARCHAR(100) NULL,`price` FLOAT NULL,`sale_amount` FLOAT NULL,`in_stock` TINYINT NULL,`link` VARCHAR(1000) NULL, PRIMARY KEY (`id`), UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);')
 
-        execute_query(connection, 'ALTER TABLE `pcpartsbotdb`.`best_buy` ADD UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE;')
         # === DATA SCRAPING AND INVENTORY BUILDING ===
         # navigate to the BestBuy website on the PC components category page and with filter for the highest rated items
         driver.get('https://www.bestbuy.ca/en-ca/category/pc-components/20374?path=category%253AComputers%2B%2526%2BTablets%253Bcategory%253APC%2BComponents%253Bsoldandshippedby0enrchstring%253ABest%2BBuy&sort=highestRated&page=1')
@@ -103,6 +104,7 @@ class BestBuy(Store):
             except TimeoutException:
                 # in this case, a timeout occur (because the script takes too long to execute). Simply reload the page and continue the loop.
                 driver.get(f'https://www.bestbuy.ca/en-ca/category/pc-components/20374?path=category%253AComputers%2B%2526%2BTablets%253Bcategory%253APC%2BComponents%253Bsoldandshippedby0enrchstring%253ABest%2BBuy&sort=highestRated&page={page_number}')
+
 
     @staticmethod
     def all_names() -> list[str]:
