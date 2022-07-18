@@ -43,11 +43,15 @@ database_password = ""
 bot_token = ""
 ```
 In between each of the quotes, paste the required data (this should be specific to your operating system/database/Discord bot). Save the file. Next, open the `store.py` file, and locate the following line (line 42-43):
-`if driver is None: 
+```
+if driver is None: 
     driver = webdriver.Safari(executable_path=os.environ.get("safaridriver_path"))`
+```
 and replace it with
-`if driver is None: 
+```python
+if driver is None: 
     driver = webdriver.Safari(executable_path=os.environ.get("chromedriver_path"))`
+```
     
 
 ### Additional Step For Linux Installation
