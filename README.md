@@ -43,7 +43,7 @@ database_password = ""
 bot_token = ""
 ```
 In between each of the quotes, paste the required data (this should be specific to your operating system/database/Discord bot). Save the file. Next, open the `store.py` file, and locate the following line (line 42-43):
-```
+```python
 if driver is None: 
     driver = webdriver.Safari(executable_path=os.environ.get("safaridriver_path"))`
 ```
@@ -56,13 +56,13 @@ if driver is None:
 
 ### Additional Step For Linux Installation
 Locate the following lines (lines 135-137)
-```
+```python
 scheduler.add_job(update_database, 'cron', day_of_week='0-6', hour=1)
 scheduler.add_job(update_mailing_list_items, 'cron', day_of_week='0-6', hour=2, minute=30)
 scheduler.add_job(text_mailing_list, 'cron', day_of_week='0-6', hour=8)
 ```
 and replace them with 
-```
+```python
 scheduler.add_job(update_database, 'cron', day_of_week='0-6', hour=5)
 scheduler.add_job(update_mailing_list_items, 'cron', day_of_week='0-6', hour=7, minute=30)
 scheduler.add_job(text_mailing_list, 'cron', day_of_week='0-6', hour=13)
