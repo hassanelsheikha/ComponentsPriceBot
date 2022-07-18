@@ -48,8 +48,25 @@ In between each of the quotes, paste the required data (this should be specific 
 and replace it with
 `if driver is None: 
     driver = webdriver.Safari(executable_path=os.environ.get("chromedriver_path"))`
-#### Reccomended Step For Windows Installation
-Replace every word `Safari` with `Chrome`. This is not necessary but it is reccomended. 
+    
+
+### Additional Step For Linux Installation
+Locate the following lines (lines 135-137)
+```
+scheduler.add_job(update_database, 'cron', day_of_week='0-6', hour=1)
+scheduler.add_job(update_mailing_list_items, 'cron', day_of_week='0-6', hour=2, minute=30)
+scheduler.add_job(text_mailing_list, 'cron', day_of_week='0-6', hour=8)
+```
+and replace them with 
+```
+scheduler.add_job(update_database, 'cron', day_of_week='0-6', hour=5)
+scheduler.add_job(update_mailing_list_items, 'cron', day_of_week='0-6', hour=7, minute=30)
+scheduler.add_job(text_mailing_list, 'cron', day_of_week='0-6', hour=13)
+```
+This is because the default time zone for cron on Linux is 4 hours behind EST, so these lines will keep the times correct.
+
+#### Reccomended Step For Windows/Linux Installation
+Replace every word `Safari` with `Chrome`. This is not necessary but it is reccomended.
 
 ## Usage
 Run the `bot.py` file. Your bot should have an online status. Text `.p` to the bot to see instructions on how to use it. 
