@@ -50,7 +50,7 @@ if driver is None:
 and replace it with
 ```python
 if driver is None: 
-    driver = webdriver.Safari(executable_path=os.environ.get("chromedriver_path"))`
+    driver = webdriver.Chrome(executable_path=os.environ.get("chromedriver_path"))`
 ```
     
 
